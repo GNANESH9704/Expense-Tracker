@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api/expenses';
+const API_URL = 'https://expense-tracker-mzau.onrender.com/api/expenses';
 const form = document.getElementById('expense-form');
 const list = document.getElementById('expense-list');
 const totalDisplay = document.getElementById('total');
