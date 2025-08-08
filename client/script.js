@@ -1,4 +1,5 @@
 const API_URL = 'https://expense-tracker-mzau.onrender.com/api/expenses';
+const BASE_URL = "https://expense-tracker-mzau.onrender.com";
 const form = document.getElementById('expense-form');
 const list = document.getElementById('expense-list');
 const totalDisplay = document.getElementById('total');
