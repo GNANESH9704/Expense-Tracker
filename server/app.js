@@ -10,12 +10,13 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // ✅ Debug log
 console.log("Loaded MONGO_URI:", process.env.MONGO_URI);
+console.log("Environment:", process.env.NODE_ENV);
 
 const app = express();
 
-// ✅ Enable CORS with options (allow frontend URL)
+// ✅ Enable CORS with options (corrected URL and removed trailing slash)
 app.use(cors({
-  origin: 'https://gnanesh-expense-tracker.netlify.app/', // Replace '*' with Netlify frontend URL for better security
+  origin: 'https://gnanesh-expense-tracker.netlify.app', // no trailing slash
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
@@ -27,11 +28,14 @@ app.use(express.json());
 app.use('/api/expenses', expenseRoutes);
 
 // ✅ Serve frontend if in production
-const clientBuildPath = path.resolve(__dirname, '../client');
-app.use(express.static(clientBuildPath));
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(clientBuildPath, 'index.html'));
-});
+if (process.env.NODE_ENV === 'production') {
+  const clientBuildPath = path.resolve(__dirname, '../client');
+  app.use(express.static(clientBuildPath));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(clientBuildPath, 'index.html'));
+  });
+}
 
 // ✅ Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {

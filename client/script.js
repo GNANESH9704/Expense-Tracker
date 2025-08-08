@@ -1,5 +1,7 @@
-const API_URL = 'https://expense-tracker-mzau.onrender.com/api/expenses';
-const BASE_URL = "https://expense-tracker-mzau.onrender.com";
+// ✅ Updated base URL to match your deployed backend
+const API_BASE_URL = 'https://expense-tracker-mzau.onrender.com';
+const API_URL = `${API_BASE_URL}/api/expenses`;
+
 const form = document.getElementById('expense-form');
 const list = document.getElementById('expense-list');
 const totalDisplay = document.getElementById('total');
@@ -25,7 +27,7 @@ function displayCurrentDate() {
 // Form submission
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  
+
   const title = document.getElementById('title').value;
   const amount = parseFloat(document.getElementById('amount').value);
   const category = document.getElementById('category').value;
@@ -62,7 +64,7 @@ async function fetchExpenses() {
   try {
     const res = await fetch(API_URL);
     if (!res.ok) throw new Error('Failed to fetch expenses');
-    
+
     const expenses = await res.json();
     renderExpenseList(expenses);
     updateTotals();
@@ -75,7 +77,7 @@ async function fetchExpenses() {
 // Render expense list
 function renderExpenseList(expenses) {
   list.innerHTML = '';
-  
+
   if (expenses.length === 0) {
     list.innerHTML = `
       <div class="empty-state">
@@ -93,8 +95,8 @@ function renderExpenseList(expenses) {
 // Filter expenses by category
 function filterExpensesByCategory(expenses) {
   const category = filterCategory.value;
-  return category === 'all' 
-    ? expenses 
+  return category === 'all'
+    ? expenses
     : expenses.filter(expense => expense.category === category);
 }
 
@@ -124,12 +126,12 @@ function addExpenseToDOM(expense) {
 // Delete expense
 async function deleteExpense(id) {
   try {
-    const res = await fetch(`${API_URL}/${id}`, { 
-      method: 'DELETE' 
+    const res = await fetch(`${API_URL}/${id}`, {
+      method: 'DELETE'
     });
-    
+
     if (!res.ok) throw new Error('Failed to delete expense');
-    
+
     fetchExpenses();
     showNotification('Expense deleted', 'success');
   } catch (error) {
@@ -143,10 +145,9 @@ async function updateTotals() {
   try {
     const res = await fetch(API_URL);
     if (!res.ok) throw new Error('Failed to fetch expenses');
-    
+
     const expenses = await res.json();
-    
-    // Calculate totals
+
     const total = expenses.reduce((sum, item) => sum + item.amount, 0);
     const foodTotalAmount = expenses
       .filter(e => e.category === 'Food')
@@ -157,14 +158,12 @@ async function updateTotals() {
     const transportTotalAmount = expenses
       .filter(e => e.category === 'Transport')
       .reduce((sum, item) => sum + item.amount, 0);
-    
-    // Update UI
+
     totalDisplay.textContent = total.toFixed(2);
     foodTotal.textContent = `₹${foodTotalAmount.toFixed(2)}`;
     shoppingTotal.textContent = `₹${shoppingTotalAmount.toFixed(2)}`;
     transportTotal.textContent = `₹${transportTotalAmount.toFixed(2)}`;
-    
-    // Animate total update
+
     totalDisplay.parentElement.classList.add('pulse');
     setTimeout(() => {
       totalDisplay.parentElement.classList.remove('pulse');
@@ -181,15 +180,15 @@ filterCategory.addEventListener('change', fetchExpenses);
 function showNotification(message, type) {
   notification.textContent = message;
   notification.className = 'notification';
-  
+
   if (type === 'success') {
     notification.style.backgroundColor = '#4caf50';
   } else if (type === 'error') {
     notification.style.backgroundColor = '#f44336';
   }
-  
+
   notification.classList.add('show');
-  
+
   setTimeout(() => {
     notification.classList.remove('show');
   }, 3000);
