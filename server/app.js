@@ -19,18 +19,26 @@ app.use(cors({
 }));
 
 // ✅ Handle OPTIONS (preflight) for all routes
-app.options('*', cors({
-  origin: 'https://gnanesh-expense-tracker.netlify.app',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type'],
-  credentials: true
-}));
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', 'https://gnanesh-expense-tracker.netlify.app');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  res.sendStatus(200);
+});
 
 // ✅ Parse JSON
 app.use(express.json());
 
 // ✅ API routes
 app.use('/api/expenses', expenseRoutes);
+
+// ✅ Fallback CORS for any unmatched routes or errors
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://gnanesh-expense-tracker.netlify.app');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+});
 
 // ✅ MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
