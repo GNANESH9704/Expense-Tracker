@@ -5,34 +5,34 @@ const dotenv = require('dotenv');
 const path = require('path');
 const expenseRoutes = require('./routes/expenses');
 
-// ✅ Load .env from root
+// Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-// ✅ Debug log
 console.log("Loaded MONGO_URI:", process.env.MONGO_URI);
 console.log("Environment:", process.env.NODE_ENV);
 
 const app = express();
 
-// ✅ CORS middleware (runs before everything else)
+// ✅ Apply CORS for all routes & methods
 app.use(cors({
-  origin: "https://gnanesh-expense-tracker.netlify.app", // your frontend URL
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: 'https://gnanesh-expense-tracker.netlify.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
 
-// ✅ Handle preflight requests
-app.options('*', cors({
-  origin: "https://gnanesh-expense-tracker.netlify.app",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
-
-// ✅ Parse incoming JSON
+// ✅ Parse JSON before routes
 app.use(express.json());
 
 // ✅ API routes
 app.use('/api/expenses', expenseRoutes);
+
+// ✅ Fallback CORS for errors and unknown routes
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://gnanesh-expense-tracker.netlify.app');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+});
 
 // ✅ Serve frontend if in production
 if (process.env.NODE_ENV === 'production') {
@@ -44,7 +44,7 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// ✅ Connect to MongoDB
+// ✅ MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
