@@ -14,10 +14,11 @@ console.log("Environment:", process.env.NODE_ENV);
 
 const app = express();
 
-// ✅ Enable CORS with options (corrected URL and removed trailing slash)
+const cors = require("cors");
+
 app.use(cors({
-  origin: 'https://gnanesh-expense-tracker.netlify.app', // no trailing slash
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin: "https://gnanesh-expense-tracker.netlify.app", // your frontend URL
+  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
 

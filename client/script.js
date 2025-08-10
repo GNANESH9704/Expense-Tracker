@@ -1,6 +1,9 @@
-// ✅ Updated base URL to match your deployed backend
-const API_BASE_URL = 'https://expense-tracker-mzau.onrender.com';
-const API_URL = `${API_BASE_URL}/api/expenses`;
+const API_BASE = "https://expense-tracker-mzau.onrender.com"; // Render backend
+
+// Example: Fetch expenses
+fetch(`${API_BASE}/api/expenses`)
+  .then(res => res.json())
+  .then(data => console.log(data));
 
 const form = document.getElementById('expense-form');
 const list = document.getElementById('expense-list');
