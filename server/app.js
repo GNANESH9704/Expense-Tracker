@@ -14,8 +14,6 @@ console.log("Environment:", process.env.NODE_ENV);
 
 const app = express();
 
-const cors = require("cors");
-
 app.use(cors({
   origin: "https://gnanesh-expense-tracker.netlify.app", // your frontend URL
   methods: ["GET", "POST", "PUT", "DELETE"],
