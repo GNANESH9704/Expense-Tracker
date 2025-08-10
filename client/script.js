@@ -1,11 +1,9 @@
 const API_URL = "https://expense-tracker-mzau.onrender.com";
 
-// Example: Fetch expenses (debug log to confirm URL)
+// Debug log to confirm URL
 console.log("Backend API:", `${API_URL}/api/expenses`);
-fetch(`${API_URL}/api/expenses`)
-  .then(res => res.json())
-  .then(data => console.log(data));
 
+// DOM elements
 const form = document.getElementById('expense-form');
 const list = document.getElementById('expense-list');
 const totalDisplay = document.getElementById('total');
@@ -28,6 +26,39 @@ function displayCurrentDate() {
   currentDate.textContent = new Date().toLocaleDateString('en-US', options);
 }
 
+// Enhanced fetch wrapper with CORS handling
+async function fetchWithCORS(url, options = {}) {
+  try {
+    const response = await fetch(url, {
+      ...options,
+      credentials: 'include', // Important for CORS with credentials
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      },
+      mode: 'cors' // Explicitly request CORS mode
+    });
+
+    // Check if CORS headers are present
+    const corsHeaders = response.headers.get('Access-Control-Allow-Origin');
+    if (!corsHeaders) {
+      console.warn('CORS headers missing in response');
+    }
+
+    if (!response.ok) {
+      const error = new Error(`HTTP error! status: ${response.status}`);
+      error.response = response;
+      throw error;
+    }
+
+    return response;
+  } catch (error) {
+    console.error('Fetch error:', error);
+    showNotification('Network error occurred', 'error');
+    throw error;
+  }
+}
+
 // Form submission
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -44,13 +75,10 @@ form.addEventListener('submit', async (e) => {
   const data = { title, amount, category };
 
   try {
-    const res = await fetch(`${API_URL}/api/expenses`, {
+    const res = await fetchWithCORS(`${API_URL}/api/expenses`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-
-    if (!res.ok) throw new Error('Failed to add expense');
 
     const newExpense = await res.json();
     addExpenseToDOM(newExpense);
@@ -59,16 +87,16 @@ form.addEventListener('submit', async (e) => {
     showNotification('Expense added successfully', 'success');
   } catch (error) {
     console.error('Error:', error);
-    showNotification('Failed to add expense', 'error');
+    showNotification(error.response?.status === 401 
+      ? 'Authentication required' 
+      : 'Failed to add expense', 'error');
   }
 });
 
 // Fetch expenses
 async function fetchExpenses() {
   try {
-    const res = await fetch(`${API_URL}/api/expenses`);
-    if (!res.ok) throw new Error('Failed to fetch expenses');
-
+    const res = await fetchWithCORS(`${API_URL}/api/expenses`);
     const expenses = await res.json();
     renderExpenseList(expenses);
     updateTotals();
@@ -130,11 +158,9 @@ function addExpenseToDOM(expense) {
 // Delete expense
 async function deleteExpense(id) {
   try {
-    const res = await fetch(`${API_URL}/api/expenses/${id}`, {
+    const res = await fetchWithCORS(`${API_URL}/api/expenses/${id}`, {
       method: 'DELETE'
     });
-
-    if (!res.ok) throw new Error('Failed to delete expense');
 
     fetchExpenses();
     showNotification('Expense deleted', 'success');
@@ -147,9 +173,7 @@ async function deleteExpense(id) {
 // Update totals
 async function updateTotals() {
   try {
-    const res = await fetch(`${API_URL}/api/expenses`);
-    if (!res.ok) throw new Error('Failed to fetch expenses');
-
+    const res = await fetchWithCORS(`${API_URL}/api/expenses`);
     const expenses = await res.json();
 
     const total = expenses.reduce((sum, item) => sum + item.amount, 0);
@@ -197,3 +221,9 @@ function showNotification(message, type) {
     notification.classList.remove('show');
   }, 3000);
 }
+
+// Initial test fetch
+fetchWithCORS(`${API_URL}/api/expenses`)
+  .then(res => res.json())
+  .then(data => console.log('Initial test fetch successful:', data))
+  .catch(err => console.error('Initial test fetch failed:', err));

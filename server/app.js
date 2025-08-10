@@ -10,63 +10,41 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 
-// ✅ Enhanced CORS configuration
-const corsOptions = {
-  origin: 'https://gnanesh-expense-tracker.netlify.app',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-};
+// 1. FIRST MIDDLEWARE - CORS with explicit headers
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://gnanesh-expense-tracker.netlify.app');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
 
-// ✅ Apply CORS middleware
-app.use(cors(corsOptions));
-
-// ✅ Explicit OPTIONS handler for preflight requests
-app.options('*', cors(corsOptions));
-
-// ✅ Body parsing middleware
+// 2. Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ API routes
+// 3. Routes
 app.use('/api/expenses', expenseRoutes);
 
-// ✅ Error handling middleware with CORS headers
+// 4. Error handling - ensure CORS headers are present even on errors
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.header('Access-Control-Allow-Origin', 'https://gnanesh-expense-tracker.netlify.app');
-  res.status(500).json({ error: 'Something went wrong!' });
+  res.status(500).json({ error: 'Server error' });
 });
 
-// ✅ 404 handler with CORS headers
-app.use((req, res) => {
-  res.header('Access-Control-Allow-Origin', 'https://gnanesh-expense-tracker.netlify.app');
-  res.status(404).json({ error: 'Not found' });
-});
-
-// ✅ MongoDB connection with improved configuration
+// MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000
+  useUnifiedTopology: true
 })
-.then(() => console.log('✅ MongoDB Connected Successfully'))
-.catch(err => {
-  console.error('❌ MongoDB Connection Error:', err);
-  process.exit(1);
-});
+.then(() => console.log('MongoDB Connected'))
+.catch(err => console.error('DB Connection Error:', err));
 
-// ✅ Server startup
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
-
-// ✅ Handle server errors
-server.on('error', (error) => {
-  if (error.syscall !== 'listen') throw error;
-  console.error('❌ Server Error:', error);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
