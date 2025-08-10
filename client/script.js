@@ -1,7 +1,8 @@
-const API_BASE = "https://expense-tracker-mzau.onrender.com"; // Render backend
+const API_URL = "https://expense-tracker-mzau.onrender.com";
 
-// Example: Fetch expenses
-fetch(`${API_BASE}/api/expenses`)
+// Example: Fetch expenses (debug log to confirm URL)
+console.log("Backend API:", `${API_URL}/api/expenses`);
+fetch(`${API_URL}/api/expenses`)
   .then(res => res.json())
   .then(data => console.log(data));
 
@@ -43,7 +44,7 @@ form.addEventListener('submit', async (e) => {
   const data = { title, amount, category };
 
   try {
-    const res = await fetch(API_URL, {
+    const res = await fetch(`${API_URL}/api/expenses`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -65,7 +66,7 @@ form.addEventListener('submit', async (e) => {
 // Fetch expenses
 async function fetchExpenses() {
   try {
-    const res = await fetch(API_URL);
+    const res = await fetch(`${API_URL}/api/expenses`);
     if (!res.ok) throw new Error('Failed to fetch expenses');
 
     const expenses = await res.json();
@@ -129,7 +130,7 @@ function addExpenseToDOM(expense) {
 // Delete expense
 async function deleteExpense(id) {
   try {
-    const res = await fetch(`${API_URL}/${id}`, {
+    const res = await fetch(`${API_URL}/api/expenses/${id}`, {
       method: 'DELETE'
     });
 
@@ -146,7 +147,7 @@ async function deleteExpense(id) {
 // Update totals
 async function updateTotals() {
   try {
-    const res = await fetch(API_URL);
+    const res = await fetch(`${API_URL}/api/expenses`);
     if (!res.ok) throw new Error('Failed to fetch expenses');
 
     const expenses = await res.json();

@@ -14,8 +14,16 @@ console.log("Environment:", process.env.NODE_ENV);
 
 const app = express();
 
+// ✅ CORS middleware (runs before everything else)
 app.use(cors({
   origin: "https://gnanesh-expense-tracker.netlify.app", // your frontend URL
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
+// ✅ Handle preflight requests
+app.options('*', cors({
+  origin: "https://gnanesh-expense-tracker.netlify.app",
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
