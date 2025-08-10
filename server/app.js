@@ -15,8 +15,17 @@ const app = express();
 
 // ✅ Apply CORS for all routes & methods
 app.use(cors({
+  origin: 'https://gnanesh-expense-tracker.netlify.app', // your frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type'],
+  credentials: true
+}));
+
+// ✅ Handle preflight requests
+app.options('*', cors({
   origin: 'https://gnanesh-expense-tracker.netlify.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type'],
   credentials: true
 }));
 
