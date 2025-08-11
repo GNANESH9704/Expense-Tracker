@@ -9,7 +9,6 @@ const expenseRoutes = require('./routes/expenses');
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
-const cors = require('cors');
 
 // ✅ Allow only your Netlify frontend
 app.use(cors({
