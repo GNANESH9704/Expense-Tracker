@@ -1,4 +1,4 @@
-const API_URL = "https://expense-tracker-mzau.onrender.com"; // Backend URL - verify exact match
+const API_URL = "https://expense-tracker-mzau.onrender.com"; // Backend URL
 
 // Debug log to confirm URL
 console.log("Backend API:", `${API_URL}/api/expenses`);
@@ -14,18 +14,28 @@ const filterCategory = document.getElementById('filter-category');
 const currentDate = document.getElementById('current-date');
 const notification = document.getElementById('notification');
 
-// ========== ENHANCED FETCH WRAPPER ==========
+// ========== ENHANCED FETCH WRAPPER WITH CORS FIXES ==========
 async function fetchWithCORS(url, options = {}) {
+  // Add cache-busting parameter to prevent Cloudflare caching issues
+  const cacheBuster = `t=${Date.now()}`;
+  const separator = url.includes('?') ? '&' : '?';
+  const fullUrl = `${API_URL}${url}${separator}${cacheBuster}`;
+
   try {
-    const response = await fetch(`${API_URL}${url}`, {
+    console.log('Attempting request to:', fullUrl); // Debug log
+    
+    const response = await fetch(fullUrl, {
       ...options,
       credentials: 'include', // Required for CORS with credentials
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         ...options.headers
       }
     });
 
+    console.log('Response status:', response.status); // Debug log
+    
     if (!response.ok) {
       const error = new Error(`HTTP ${response.status}`);
       error.response = response;
@@ -33,7 +43,11 @@ async function fetchWithCORS(url, options = {}) {
     }
     return response;
   } catch (error) {
-    console.error('Fetch error:', error);
+    console.error('Fetch error details:', {
+      url: fullUrl,
+      error: error.toString(),
+      stack: error.stack
+    });
     showNotification('Network error occurred. Please try again.', 'error');
     throw error;
   }
@@ -199,8 +213,11 @@ function showNotification(message, type) {
 // Event listeners
 filterCategory.addEventListener('change', fetchExpenses);
 
-// Initial test
+// Initial test connection
 fetchWithCORS('/api/expenses')
-  .then(res => res.json())
+  .then(res => {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  })
   .then(data => console.log('Initial connection successful', data))
   .catch(err => console.error('Initial connection failed:', err));
