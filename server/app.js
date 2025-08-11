@@ -9,6 +9,14 @@ const expenseRoutes = require('./routes/expenses');
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
+const cors = require('cors');
+
+// ✅ Allow only your Netlify frontend
+app.use(cors({
+  origin: ['http://localhost:5000', 'https://gnanesh-expense-tracker.netlify.app'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 
 // 1. FIRST MIDDLEWARE - CORS with explicit headers
 app.use((req, res, next) => {
