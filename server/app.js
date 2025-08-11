@@ -21,12 +21,12 @@ app.use((req, res, next) => {
 });
 
 // CORS middleware — MUST be before routes
-app.use(cors({
-  origin: ['https://gnanesh-expense-tracker.netlify.app', 'http://localhost:5000'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// app.use(cors({
+//   origin: ['https://gnanesh-expense-tracker.netlify.app', 'http://localhost:5000'],
+//   credentials: true,
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization']
+// }));
 
 app.options('*', cors()); // handle preflight OPTIONS
 
