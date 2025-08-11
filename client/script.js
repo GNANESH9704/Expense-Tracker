@@ -1,4 +1,4 @@
-const API_URL = "https://expense-tracker-mzau.onrender.com";
+const API_URL = "https://expense-tracker-mzau.onrender.com"; // Verify exact URL matches backend CORS config
 
 // Debug log to confirm URL
 console.log("Backend API:", `${API_URL}/api/expenses`);
@@ -14,29 +14,16 @@ const filterCategory = document.getElementById('filter-category');
 const currentDate = document.getElementById('current-date');
 const notification = document.getElementById('notification');
 
-// Initialize app
-window.onload = () => {
-  displayCurrentDate();
-  fetchExpenses();
-};
-
-// Display current date
-function displayCurrentDate() {
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  currentDate.textContent = new Date().toLocaleDateString('en-US', options);
-}
-
-// Fetch wrapper without checking Access-Control-Allow-Origin (browser manages CORS)
+// ========== UPDATED FETCH WRAPPER ==========
 async function fetchWithCORS(url, options = {}) {
   try {
     const response = await fetch(url, {
       ...options,
-      credentials: 'include', // Important for CORS with credentials
+      credentials: 'include', // Required for CORS with credentials
       headers: {
         'Content-Type': 'application/json',
         ...options.headers
-      },
-      mode: 'cors'
+      }
     });
 
     if (!response.ok) {
@@ -44,13 +31,23 @@ async function fetchWithCORS(url, options = {}) {
       error.response = response;
       throw error;
     }
-
     return response;
   } catch (error) {
     console.error('Fetch error:', error);
     showNotification('Network error occurred', 'error');
     throw error;
   }
+}
+
+// Initialize app
+window.onload = () => {
+  displayCurrentDate();
+  fetchExpenses();
+};
+
+function displayCurrentDate() {
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  currentDate.textContent = new Date().toLocaleDateString('en-US', options);
 }
 
 // Form submission
@@ -71,8 +68,7 @@ form.addEventListener('submit', async (e) => {
   try {
     const res = await fetchWithCORS(`${API_URL}/api/expenses`, {
       method: 'POST',
-      body: JSON.stringify(data),
-      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
     });
 
     const newExpense = await res.json();
@@ -82,8 +78,8 @@ form.addEventListener('submit', async (e) => {
     showNotification('Expense added successfully', 'success');
   } catch (error) {
     console.error('Error:', error);
-    showNotification(error.response?.status === 401
-      ? 'Authentication required'
+    showNotification(error.response?.status === 401 
+      ? 'Authentication required' 
       : 'Failed to add expense', 'error');
   }
 });
@@ -217,30 +213,8 @@ function showNotification(message, type) {
   }, 3000);
 }
 
-// Initial test fetch
+// Initial test
 fetchWithCORS(`${API_URL}/api/expenses`)
   .then(res => res.json())
-  .then(data => console.log('Initial test fetch successful:', data))
-  .catch(err => console.error('Initial test fetch failed:', err));
-
-// In your frontend code (script.js)
-async function fetchExpenses() {
-  try {
-    const response = await fetch('https://expense-tracker-mzau.onrender.com/api/expenses', {
-      method: 'GET',
-      credentials: 'include', // If using cookies/sessions
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Fetch error:', error);
-    throw error;
-  }
-}
+  .then(data => console.log('Initial test successful', data))
+  .catch(err => console.error('Initial test failed', err));
