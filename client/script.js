@@ -1,4 +1,4 @@
-const API_URL = "https://expense-tracker-mzau.onrender.com"; // Verify exact URL matches backend CORS config
+const API_URL = "https://expense-tracker-mzau.onrender.com"; // Backend URL - verify exact match
 
 // Debug log to confirm URL
 console.log("Backend API:", `${API_URL}/api/expenses`);
@@ -14,10 +14,10 @@ const filterCategory = document.getElementById('filter-category');
 const currentDate = document.getElementById('current-date');
 const notification = document.getElementById('notification');
 
-// ========== UPDATED FETCH WRAPPER ==========
+// ========== ENHANCED FETCH WRAPPER ==========
 async function fetchWithCORS(url, options = {}) {
   try {
-    const response = await fetch(url, {
+    const response = await fetch(`${API_URL}${url}`, {
       ...options,
       credentials: 'include', // Required for CORS with credentials
       headers: {
@@ -27,19 +27,19 @@ async function fetchWithCORS(url, options = {}) {
     });
 
     if (!response.ok) {
-      const error = new Error(`HTTP error! status: ${response.status}`);
+      const error = new Error(`HTTP ${response.status}`);
       error.response = response;
       throw error;
     }
     return response;
   } catch (error) {
     console.error('Fetch error:', error);
-    showNotification('Network error occurred', 'error');
+    showNotification('Network error occurred. Please try again.', 'error');
     throw error;
   }
 }
 
-// Initialize app
+// ========== APPLICATION INITIALIZATION ==========
 window.onload = () => {
   displayCurrentDate();
   fetchExpenses();
@@ -50,7 +50,7 @@ function displayCurrentDate() {
   currentDate.textContent = new Date().toLocaleDateString('en-US', options);
 }
 
-// Form submission
+// ========== FORM HANDLING ==========
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -58,46 +58,41 @@ form.addEventListener('submit', async (e) => {
   const amount = parseFloat(document.getElementById('amount').value);
   const category = document.getElementById('category').value;
 
-  if (!title || !amount || !category) {
-    showNotification('Please fill all fields', 'error');
+  // Validation
+  if (!title || isNaN(amount)) {
+    showNotification('Please enter valid title and amount', 'error');
     return;
   }
 
-  const data = { title, amount, category };
-
   try {
-    const res = await fetchWithCORS(`${API_URL}/api/expenses`, {
+    const res = await fetchWithCORS('/api/expenses', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify({ title, amount, category })
     });
 
     const newExpense = await res.json();
     addExpenseToDOM(newExpense);
     updateTotals();
     form.reset();
-    showNotification('Expense added successfully', 'success');
+    showNotification('Expense added successfully!', 'success');
   } catch (error) {
-    console.error('Error:', error);
-    showNotification(error.response?.status === 401 
-      ? 'Authentication required' 
-      : 'Failed to add expense', 'error');
+    console.error('Submission error:', error);
   }
 });
 
-// Fetch expenses
+// ========== EXPENSE MANAGEMENT ==========
 async function fetchExpenses() {
   try {
-    const res = await fetchWithCORS(`${API_URL}/api/expenses`);
+    const res = await fetchWithCORS('/api/expenses');
     const expenses = await res.json();
     renderExpenseList(expenses);
     updateTotals();
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Loading error:', error);
     showNotification('Failed to load expenses', 'error');
   }
 }
 
-// Render expense list
 function renderExpenseList(expenses) {
   list.innerHTML = '';
 
@@ -115,15 +110,13 @@ function renderExpenseList(expenses) {
   filteredExpenses.forEach(addExpenseToDOM);
 }
 
-// Filter expenses by category
 function filterExpensesByCategory(expenses) {
   const category = filterCategory.value;
-  return category === 'all'
-    ? expenses
+  return category === 'all' 
+    ? expenses 
     : expenses.filter(expense => expense.category === category);
 }
 
-// Add expense to DOM
 function addExpenseToDOM(expense) {
   const emptyState = document.querySelector('.empty-state');
   if (emptyState) emptyState.remove();
@@ -146,25 +139,23 @@ function addExpenseToDOM(expense) {
   list.appendChild(card);
 }
 
-// Delete expense
 async function deleteExpense(id) {
   try {
-    await fetchWithCORS(`${API_URL}/api/expenses/${id}`, {
+    await fetchWithCORS(`/api/expenses/${id}`, {
       method: 'DELETE'
     });
-
     fetchExpenses();
     showNotification('Expense deleted', 'success');
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Deletion error:', error);
     showNotification('Failed to delete expense', 'error');
   }
 }
 
-// Update totals
+// ========== TOTALS CALCULATION ==========
 async function updateTotals() {
   try {
-    const res = await fetchWithCORS(`${API_URL}/api/expenses`);
+    const res = await fetchWithCORS('/api/expenses');
     const expenses = await res.json();
 
     const total = expenses.reduce((sum, item) => sum + item.amount, 0);
@@ -183,29 +174,21 @@ async function updateTotals() {
     shoppingTotal.textContent = `₹${shoppingTotalAmount.toFixed(2)}`;
     transportTotal.textContent = `₹${transportTotalAmount.toFixed(2)}`;
 
+    // Animation
     totalDisplay.parentElement.classList.add('pulse');
     setTimeout(() => {
       totalDisplay.parentElement.classList.remove('pulse');
     }, 500);
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Totals calculation error:', error);
   }
 }
 
-// Filter category change
-filterCategory.addEventListener('change', fetchExpenses);
-
-// Show notification
+// ========== UI HELPERS ==========
 function showNotification(message, type) {
   notification.textContent = message;
   notification.className = 'notification';
-
-  if (type === 'success') {
-    notification.style.backgroundColor = '#4caf50';
-  } else if (type === 'error') {
-    notification.style.backgroundColor = '#f44336';
-  }
-
+  notification.style.backgroundColor = type === 'success' ? '#4caf50' : '#f44336';
   notification.classList.add('show');
 
   setTimeout(() => {
@@ -213,8 +196,11 @@ function showNotification(message, type) {
   }, 3000);
 }
 
+// Event listeners
+filterCategory.addEventListener('change', fetchExpenses);
+
 // Initial test
-fetchWithCORS(`${API_URL}/api/expenses`)
+fetchWithCORS('/api/expenses')
   .then(res => res.json())
-  .then(data => console.log('Initial test successful', data))
-  .catch(err => console.error('Initial test failed', err));
+  .then(data => console.log('Initial connection successful', data))
+  .catch(err => console.error('Initial connection failed:', err));

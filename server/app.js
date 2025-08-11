@@ -2,42 +2,50 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
+const cors = require('cors');
 const expenseRoutes = require('./routes/expenses');
-const cors = require('cors'); // ONLY NEW ADDITION
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 
-// ONLY CORS CHANGES BELOW (replace your existing CORS middleware)
+// Enhanced CORS config
 const corsOptions = {
-  origin: 'https://gnanesh-expense-tracker.netlify.app',
+  origin: [
+    'https://gnanesh-expense-tracker.netlify.app', // Production
+    'http://localhost:3000' // Development
+  ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE']
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Preflight support
 
-// KEEP EVERYTHING ELSE EXACTLY AS YOU HAD IT BELOW
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
+// Middleware
+app.use(express.json());
 app.use((req, res, next) => {
-  console.log(`Request: ${req.method} ${req.url}`);
+  console.log(`${req.method} ${req.path}`);
   next();
 });
 
-app.use(express.json());
+// Routes
 app.use('/api/expenses', expenseRoutes);
 
-// Keep your existing error handler
+// Error handler
 app.use((err, req, res, next) => {
-  console.error('Global error handler:', err);
-  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+  console.error('Error:', err.stack);
+  res.status(500).json({ error: 'Internal Server Error' });
 });
 
+// Database
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB Connected'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
+// Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
