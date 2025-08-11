@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
 const expenseRoutes = require('./routes/expenses');
+const cors = require('cors'); // Add this line at the top
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -14,18 +15,19 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS middleware — must be before routes
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://gnanesh-expense-tracker.netlify.app'); // Your frontend URL
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+// CORS configuration - simpler and more reliable using the cors package
+const corsOptions = {
+  origin: 'https://gnanesh-expense-tracker.netlify.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
 
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200); // Respond OK to preflight requests
-  }
-  next();
-});
+// Use cors middleware
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions)); // Enable preflight for all routes
 
 // JSON body parser
 app.use(express.json());
@@ -33,12 +35,17 @@ app.use(express.json());
 // Mount expense routes
 app.use('/api/expenses', expenseRoutes);
 
-// Global error handler (to include CORS headers even on errors)
+// Global error handler (CORS headers will be automatically added by the cors middleware)
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err);
-  res.setHeader('Access-Control-Allow-Origin', 'https://gnanesh-expense-tracker.netlify.app');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+  res.status(err.status || 500).json({ 
+    error: err.message || 'Internal Server Error',
+    // Include CORS headers in the response
+    headers: {
+      'Access-Control-Allow-Origin': 'https://gnanesh-expense-tracker.netlify.app',
+      'Access-Control-Allow-Credentials': 'true'
+    }
+  });
 });
 
 // Connect to MongoDB
