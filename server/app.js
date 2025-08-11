@@ -2,53 +2,34 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
+const cors = require('cors');
 const expenseRoutes = require('./routes/expenses');
-const cors = require('cors'); // Add this line at the top
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 
-// Optional request logger (can comment out after debugging)
-app.use((req, res, next) => {
-  console.log(`Request: ${req.method} ${req.url}`);
-  next();
-});
-
-// CORS configuration - simpler and more reliable using the cors package
-const corsOptions = {
+// Use cors middleware configured to allow your frontend origin and credentials
+app.use(cors({
   origin: 'https://gnanesh-expense-tracker.netlify.app',
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-};
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-// Use cors middleware
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions)); // Enable preflight for all routes
-
-// JSON body parser
+// Parse JSON bodies
 app.use(express.json());
 
-// Mount expense routes
+// Mount expense API routes
 app.use('/api/expenses', expenseRoutes);
 
-// Global error handler (CORS headers will be automatically added by the cors middleware)
+// Global error handler
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err);
-  res.status(err.status || 500).json({ 
-    error: err.message || 'Internal Server Error',
-    // Include CORS headers in the response
-    headers: {
-      'Access-Control-Allow-Origin': 'https://gnanesh-expense-tracker.netlify.app',
-      'Access-Control-Allow-Credentials': 'true'
-    }
-  });
+  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
 });
 
-// Connect to MongoDB
+// Connect to MongoDB Atlas
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
