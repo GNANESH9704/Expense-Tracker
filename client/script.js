@@ -2,6 +2,7 @@ const API_URL = "https://expense-tracker-mzau.onrender.com";
 
 // Debug log to confirm URL
 console.log("Backend API:", `${API_URL}/api/expenses`);
+
 // DOM elements
 const form = document.getElementById('expense-form');
 const list = document.getElementById('expense-list');
@@ -30,10 +31,11 @@ async function fetchWithCORS(url, options = {}) {
   try {
     const response = await fetch(url, {
       ...options,
-      credentials: 'include', // Important for CORS with credentials
+      // Remove credentials if not using cookies or sessions on backend
+      // credentials: 'include',
       headers: {
+        ...(options.headers || {}),
         'Content-Type': 'application/json',
-        ...options.headers
       },
       mode: 'cors' // Explicitly request CORS mode
     });
@@ -220,9 +222,3 @@ function showNotification(message, type) {
     notification.classList.remove('show');
   }, 3000);
 }
-
-// Initial test fetch
-fetchWithCORS(`${API_URL}/api/expenses`)
-  .then(res => res.json())
-  .then(data => console.log('Initial test fetch successful:', data))
-  .catch(err => console.error('Initial test fetch failed:', err));
