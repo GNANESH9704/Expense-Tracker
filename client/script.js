@@ -26,7 +26,7 @@ function displayCurrentDate() {
   currentDate.textContent = new Date().toLocaleDateString('en-US', options);
 }
 
-// Enhanced fetch wrapper with CORS handling
+// Fetch wrapper without checking Access-Control-Allow-Origin (browser manages CORS)
 async function fetchWithCORS(url, options = {}) {
   try {
     const response = await fetch(url, {
@@ -36,14 +36,8 @@ async function fetchWithCORS(url, options = {}) {
         'Content-Type': 'application/json',
         ...options.headers
       },
-      mode: 'cors' // Explicitly request CORS mode
+      mode: 'cors'
     });
-
-    // Check if CORS headers are present
-    // const corsHeaders = response.headers.get('Access-Control-Allow-Origin');
-    // if (!corsHeaders) {
-    //   console.warn('CORS headers missing in response');
-    // }
 
     if (!response.ok) {
       const error = new Error(`HTTP error! status: ${response.status}`);
@@ -88,8 +82,8 @@ form.addEventListener('submit', async (e) => {
     showNotification('Expense added successfully', 'success');
   } catch (error) {
     console.error('Error:', error);
-    showNotification(error.response?.status === 401 
-      ? 'Authentication required' 
+    showNotification(error.response?.status === 401
+      ? 'Authentication required'
       : 'Failed to add expense', 'error');
   }
 });
