@@ -37,11 +37,19 @@ app.options('*', cors(corsOptions));
 
 // Additional headers for all responses
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || allowedOrigins[0]);
-  res.header('Access-Control-Allow-Credentials', 'true');
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
   next();
+});
+
+// Handle OPTIONS requests first
+app.options('*', (req, res) => {
+  res.sendStatus(200);
 });
 
 // ========== EXISTING MIDDLEWARE ==========
