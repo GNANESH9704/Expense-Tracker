@@ -1,7 +1,7 @@
-const API_URL = "https://expense-tracker-mzau.onrender.com";
+const API_URL = "https://expense-tracker-mzau.onrender.com/api/expenses";
 
 // Debug log to confirm URL
-console.log("Backend API:", `${API_URL}/api/expenses`);
+console.log("Backend API:", `${API_URL}`);
 
 // DOM elements
 const form = document.getElementById('expense-form');
