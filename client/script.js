@@ -31,11 +31,10 @@ async function fetchWithCORS(url, options = {}) {
   try {
     const response = await fetch(url, {
       ...options,
-      // Remove credentials if not using cookies or sessions on backend
-      // credentials: 'include',
+      credentials: 'include', // Important for CORS with credentials
       headers: {
-        ...(options.headers || {}),
         'Content-Type': 'application/json',
+        ...options.headers
       },
       mode: 'cors' // Explicitly request CORS mode
     });
@@ -64,7 +63,7 @@ async function fetchWithCORS(url, options = {}) {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  const title = document.getElementById('title').value;
+  const title = document.getElementById('title').value.trim();
   const amount = parseFloat(document.getElementById('amount').value);
   const category = document.getElementById('category').value;
 
@@ -78,7 +77,8 @@ form.addEventListener('submit', async (e) => {
   try {
     const res = await fetchWithCORS(`${API_URL}/api/expenses`, {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'application/json' },
     });
 
     const newExpense = await res.json();
@@ -159,7 +159,7 @@ function addExpenseToDOM(expense) {
 // Delete expense
 async function deleteExpense(id) {
   try {
-    const res = await fetchWithCORS(`${API_URL}/api/expenses/${id}`, {
+    await fetchWithCORS(`${API_URL}/api/expenses/${id}`, {
       method: 'DELETE'
     });
 
@@ -222,3 +222,9 @@ function showNotification(message, type) {
     notification.classList.remove('show');
   }, 3000);
 }
+
+// Initial test fetch
+fetchWithCORS(`${API_URL}/api/expenses`)
+  .then(res => res.json())
+  .then(data => console.log('Initial test fetch successful:', data))
+  .catch(err => console.error('Initial test fetch failed:', err));
