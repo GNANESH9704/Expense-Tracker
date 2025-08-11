@@ -9,20 +9,26 @@ const expenseRoutes = require('./routes/expenses');
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://gnanesh-expense-tracker.netlify.app');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // CORS middleware — MUST be before routes
 app.use(cors({
-  origin: [
-    'https://gnanesh-expense-tracker.netlify.app', // your Netlify frontend URL
-    'http://localhost:5000'                         // local dev URL
-  ],
+  origin: ['https://gnanesh-expense-tracker.netlify.app', 'http://localhost:5000'],
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Explicitly handle OPTIONS preflight requests for all routes
-app.options('*', cors());
+app.options('*', cors()); // handle preflight OPTIONS
 
 // Parse incoming JSON bodies
 app.use(express.json());
