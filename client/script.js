@@ -40,10 +40,10 @@ async function fetchWithCORS(url, options = {}) {
     });
 
     // Check if CORS headers are present
-    const corsHeaders = response.headers.get('Access-Control-Allow-Origin');
-    if (!corsHeaders) {
-      console.warn('CORS headers missing in response');
-    }
+    // const corsHeaders = response.headers.get('Access-Control-Allow-Origin');
+    // if (!corsHeaders) {
+    //   console.warn('CORS headers missing in response');
+    // }
 
     if (!response.ok) {
       const error = new Error(`HTTP error! status: ${response.status}`);
