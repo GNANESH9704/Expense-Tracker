@@ -5,14 +5,15 @@ const dotenv = require('dotenv');
 const path = require('path');
 const expenseRoutes = require('./routes/expenses');
 
-// Load environment variables from .env at root
+// Load environment variables from .env at project root
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
-// Enable CORS before any routes
+
+// CORS middleware — MUST be before routes
 app.use(cors({
   origin: [
-    'https://gnanesh-expense-tracker.netlify.app',  // your Netlify frontend URL
+    'https://gnanesh-expense-tracker.netlify.app', // your Netlify frontend URL
     'http://localhost:5000'                         // local dev URL
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -20,10 +21,13 @@ app.use(cors({
   credentials: true
 }));
 
-// Middleware to parse JSON bodies
+// Explicitly handle OPTIONS preflight requests for all routes
+app.options('*', cors());
+
+// Parse incoming JSON bodies
 app.use(express.json());
 
-// Use your expense routes under /api/expenses
+// Mount expense API routes
 app.use('/api/expenses', expenseRoutes);
 
 // Connect to MongoDB Atlas
@@ -31,7 +35,7 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// Start server
+// Start the Express server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
