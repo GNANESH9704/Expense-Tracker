@@ -222,3 +222,25 @@ fetchWithCORS(`${API_URL}/api/expenses`)
   .then(res => res.json())
   .then(data => console.log('Initial test fetch successful:', data))
   .catch(err => console.error('Initial test fetch failed:', err));
+
+// In your frontend code (script.js)
+async function fetchExpenses() {
+  try {
+    const response = await fetch('https://expense-tracker-mzau.onrender.com/api/expenses', {
+      method: 'GET',
+      credentials: 'include', // If using cookies/sessions
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Fetch error:', error);
+    throw error;
+  }
+}
