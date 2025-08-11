@@ -9,8 +9,6 @@ const expenseRoutes = require('./routes/expenses');
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
-
-app.options('*', cors()); // allow preflight for all routes
 // Enable CORS before any routes
 app.use(cors({
   origin: [
