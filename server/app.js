@@ -11,8 +11,9 @@ const app = express();
 
 // ========== ENHANCED CORS CONFIGURATION ==========
 const allowedOrigins = [
-  'https://gnanesh-expense-tracker.netlify.app',
-  'http://localhost:3000'
+  'https://gnanesh-expense-tracker.netlify.app', 
+  'http://localhost:3000',                        
+  'http://127.0.0.1:5500'
 ];
 
 const corsOptions = {
