@@ -17,36 +17,34 @@ const allowedOrigins = [
 ];
 
 // ========== FIXED + CLEAN CORS CONFIGURATION ==========
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 200
-};
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  })
+);
 
-app.use(cors(corsOptions));
-
-// Explicit preflight handling
-app.options('*', cors(corsOptions));
-
-// Add headers for ALL responses
+// ========== ALWAYS APPLY HEADERS (Render cold start fix) ==========
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
   if (allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', allowedOrigins[0]); // Default to Netlify
   }
 
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
 
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
@@ -54,6 +52,9 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// Explicit OPTIONS
+app.options('*', cors());
 
 // ========== EXISTING MIDDLEWARE ==========
 app.use(express.json());
@@ -77,7 +78,8 @@ app.use((err, req, res, next) => {
 });
 
 // ========== DATABASE CONNECTION ==========
-mongoose.connect(process.env.MONGO_URI)
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
