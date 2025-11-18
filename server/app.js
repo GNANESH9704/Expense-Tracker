@@ -9,16 +9,17 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 
-// ========== ENHANCED CORS CONFIGURATION ==========
+// ========== ALLOWED ORIGINS ==========
 const allowedOrigins = [
-  'https://gnanesh-expense-tracker.netlify.app', 
-  'http://localhost:3000',                        
+  'https://gnanesh-expense-tracker.netlify.app',
+  'http://localhost:3000',
   'http://127.0.0.1:5500'
 ];
 
+// ========== FIXED + CLEAN CORS CONFIGURATION ==========
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -30,27 +31,28 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
-// Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Explicit OPTIONS handler for preflight requests
+// Explicit preflight handling
 app.options('*', cors(corsOptions));
 
-// Additional headers for all responses
+// Add headers for ALL responses
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+
   if (allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
   }
+
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
-  next();
-});
 
-// Handle OPTIONS requests first
-app.options('*', (req, res) => {
-  res.sendStatus(200);
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+
+  next();
 });
 
 // ========== EXISTING MIDDLEWARE ==========
@@ -66,12 +68,11 @@ app.use('/api/expenses', expenseRoutes);
 // ========== ERROR HANDLER ==========
 app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
-  
-  // Handle CORS errors specifically
+
   if (err.message === 'Not allowed by CORS') {
     return res.status(403).json({ error: 'Origin not allowed' });
   }
-  
+
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
