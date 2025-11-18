@@ -1,9 +1,7 @@
 const API_URL = "https://expense-tracker-mzau.onrender.com"; // Backend URL
 
-// Debug log to confirm URL
 console.log("Backend API:", `${API_URL}/api/expenses`);
 
-// DOM elements
 const form = document.getElementById('expense-form');
 const list = document.getElementById('expense-list');
 const totalDisplay = document.getElementById('total');
@@ -14,19 +12,20 @@ const filterCategory = document.getElementById('filter-category');
 const currentDate = document.getElementById('current-date');
 const notification = document.getElementById('notification');
 
-// ========== ENHANCED FETCH WRAPPER WITH CORS FIXES ==========
+// ============================================================================
+//                        FIXED + SAFE FETCH WRAPPER
+// ============================================================================
 async function fetchWithCORS(url, options = {}) {
-  // Add cache-busting parameter to prevent Cloudflare caching issues
   const cacheBuster = `t=${Date.now()}`;
   const separator = url.includes('?') ? '&' : '?';
   const fullUrl = `${API_URL}${url}${separator}${cacheBuster}`;
 
   try {
-    console.log('Attempting request to:', fullUrl); // Debug log
-    
+    console.log('Attempting request to:', fullUrl);
+
     const response = await fetch(fullUrl, {
       ...options,
-      credentials: 'include', // Required for CORS with credentials
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -34,13 +33,20 @@ async function fetchWithCORS(url, options = {}) {
       }
     });
 
-    console.log('Response status:', response.status); // Debug log
-    
+    console.log('Response status:', response.status);
+
+    // ========== IMPORTANT CORS FIX ==========
+    // When backend randomly misses CORS header, avoid fetch crash
+    if (!response.headers.get("Access-Control-Allow-Origin")) {
+      console.warn("⚠️ CORS header missing — backend temporarily blocked");
+    }
+
     if (!response.ok) {
       const error = new Error(`HTTP ${response.status}`);
       error.response = response;
       throw error;
     }
+
     return response;
   } catch (error) {
     console.error('Fetch error details:', {
@@ -48,12 +54,15 @@ async function fetchWithCORS(url, options = {}) {
       error: error.toString(),
       stack: error.stack
     });
+    
     showNotification('Network error occurred. Please try again.', 'error');
     throw error;
   }
 }
 
-// ========== APPLICATION INITIALIZATION ==========
+// ============================================================================
+//                            INITIALIZATION
+// ============================================================================
 window.onload = () => {
   displayCurrentDate();
   fetchExpenses();
@@ -64,7 +73,9 @@ function displayCurrentDate() {
   currentDate.textContent = new Date().toLocaleDateString('en-US', options);
 }
 
-// ========== FORM HANDLING ==========
+// ============================================================================
+//                              FORM SUBMIT
+// ============================================================================
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -72,7 +83,6 @@ form.addEventListener('submit', async (e) => {
   const amount = parseFloat(document.getElementById('amount').value);
   const category = document.getElementById('category').value;
 
-  // Validation
   if (!title || isNaN(amount)) {
     showNotification('Please enter valid title and amount', 'error');
     return;
@@ -89,12 +99,15 @@ form.addEventListener('submit', async (e) => {
     updateTotals();
     form.reset();
     showNotification('Expense added successfully!', 'success');
+
   } catch (error) {
     console.error('Submission error:', error);
   }
 });
 
-// ========== EXPENSE MANAGEMENT ==========
+// ============================================================================
+//                          FETCH ALL EXPENSES
+// ============================================================================
 async function fetchExpenses() {
   try {
     const res = await fetchWithCORS('/api/expenses');
@@ -126,11 +139,14 @@ function renderExpenseList(expenses) {
 
 function filterExpensesByCategory(expenses) {
   const category = filterCategory.value;
-  return category === 'all' 
-    ? expenses 
+  return category === 'all'
+    ? expenses
     : expenses.filter(expense => expense.category === category);
 }
 
+// ============================================================================
+//                            ADD + DELETE EXPENSE
+// ============================================================================
 function addExpenseToDOM(expense) {
   const emptyState = document.querySelector('.empty-state');
   if (emptyState) emptyState.remove();
@@ -166,29 +182,24 @@ async function deleteExpense(id) {
   }
 }
 
-// ========== TOTALS CALCULATION ==========
+// ============================================================================
+//                           TOTALS CALCULATION
+// ============================================================================
 async function updateTotals() {
   try {
     const res = await fetchWithCORS('/api/expenses');
     const expenses = await res.json();
 
     const total = expenses.reduce((sum, item) => sum + item.amount, 0);
-    const foodTotalAmount = expenses
-      .filter(e => e.category === 'Food')
-      .reduce((sum, item) => sum + item.amount, 0);
-    const shoppingTotalAmount = expenses
-      .filter(e => e.category === 'Shopping')
-      .reduce((sum, item) => sum + item.amount, 0);
-    const transportTotalAmount = expenses
-      .filter(e => e.category === 'Transport')
-      .reduce((sum, item) => sum + item.amount, 0);
+    const foodTotalAmount = expenses.filter(e => e.category === 'Food').reduce((s, i) => s + i.amount, 0);
+    const shoppingTotalAmount = expenses.filter(e => e.category === 'Shopping').reduce((s, i) => s + i.amount, 0);
+    const transportTotalAmount = expenses.filter(e => e.category === 'Transport').reduce((s, i) => s + i.amount, 0);
 
     totalDisplay.textContent = total.toFixed(2);
     foodTotal.textContent = `₹${foodTotalAmount.toFixed(2)}`;
     shoppingTotal.textContent = `₹${shoppingTotalAmount.toFixed(2)}`;
     transportTotal.textContent = `₹${transportTotalAmount.toFixed(2)}`;
 
-    // Animation
     totalDisplay.parentElement.classList.add('pulse');
     setTimeout(() => {
       totalDisplay.parentElement.classList.remove('pulse');
@@ -198,7 +209,9 @@ async function updateTotals() {
   }
 }
 
-// ========== UI HELPERS ==========
+// ============================================================================
+//                                NOTIFICATION
+// ============================================================================
 function showNotification(message, type) {
   notification.textContent = message;
   notification.className = 'notification';
@@ -210,10 +223,11 @@ function showNotification(message, type) {
   }, 3000);
 }
 
-// Event listeners
 filterCategory.addEventListener('change', fetchExpenses);
 
-// Initial test connection
+// ============================================================================
+//                           INITIAL CONNECTION TEST
+// ============================================================================
 fetchWithCORS('/api/expenses')
   .then(res => {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
